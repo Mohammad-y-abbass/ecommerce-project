@@ -1,6 +1,9 @@
 package com.ecommerce.backend.services;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,6 +35,20 @@ public class AuthService {
         String encryptedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encryptedPassword);
         userRepository.save(user);
+    }
+
+    public User authenticateUser(String username, String password) {
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found");
+        }
+
+        if (!passwordEncoder.matches(password, user.getPassword()) || user == null) {
+            throw new RuntimeException("Invalid credentials!");
+        }
+
+
+        return user;
     }
 
 }

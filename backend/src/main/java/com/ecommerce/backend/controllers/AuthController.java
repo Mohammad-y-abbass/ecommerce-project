@@ -1,5 +1,6 @@
 package com.ecommerce.backend.controllers;
 
+import com.ecommerce.backend.dto.AuthResponse;
 import com.ecommerce.backend.models.User;
 import com.ecommerce.backend.services.AuthService;
 
@@ -15,18 +16,28 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<String> signUp(@RequestBody User user) {
-
+    public ResponseEntity<AuthResponse> signUp(@RequestBody User user) {
         if (authService.userExists(user.getUsername())) {
-            return ResponseEntity.badRequest().body("Username is taken!");
+            return ResponseEntity.badRequest().body(new AuthResponse(false, "Username is taken!"));
         }
 
         if (authService.emailExists(user.getEmail())) {
-            return ResponseEntity.badRequest().body("Email is taken!");
+            return ResponseEntity.badRequest().body(new AuthResponse(false, "Email is taken!"));
         }
+
         authService.saveUser(user);
-
-        return ResponseEntity.ok().body("User registered successfully!");
-
+        return ResponseEntity.ok(new AuthResponse(true, "User registered successfully!"));
     }
+
+    @PostMapping("/signin")
+    public ResponseEntity<AuthResponse> signIn(@RequestBody User user) {
+        try {
+            User authenticatedUser = authService.authenticateUser(user.getUsername(), user.getPassword());
+
+            return ResponseEntity.ok(new AuthResponse(true, "User logged in successfully!"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new AuthResponse(false, e.getMessage()));
+        }
+    }
+
 }
